@@ -56,7 +56,7 @@ class Selection(param.Parameterized):
     
     # This functions like the standard __init__ function
     def panel(self):
-        self.newMan = tealButton('New Manuscript')
+        self.newMan = tealButton('Create Manuscript')
         self.selMan = blueButton('Select Manuscript')
         
         # Binding buttons to functions that will be patched later
@@ -73,9 +73,18 @@ class Selection(param.Parameterized):
 # %% ../01_selection.ipynb 20
 @patch
 def on_click_selMan(self:Selection, null):
-    self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
+    if self.selectedManuscript == None:
+        self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
+        self.selMan.description = 'Select Different Manuscript'
+    else:
+        self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
 
 # %% ../01_selection.ipynb 22
 @patch
 def on_click_newMan(self:Selection, null):
-    self.newManClicked = True
+    if self.newManClicked == False:
+        self.newManClicked = True
+        self.newMan.description = "Don't Create Manuscript"
+    else:
+        self.newManClicked = False
+        self.newMan.description = 'Create Manuscript'
