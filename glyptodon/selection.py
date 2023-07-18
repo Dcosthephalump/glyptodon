@@ -27,34 +27,55 @@ def createManuscriptSelect():
                                       rows = 10,
                                       disabled = False,
                                       layout = widgets.Layout(height = 'auto',
-                                                              width = 'auto'
+                                                              width = '425px'
                                                              )
                                      )
     
-    return manuscripts, selectionKey, manuscriptSelect
+    return selectionKey, manuscriptSelect
 
-# %% ../01_selection.ipynb 9
+# %% ../01_selection.ipynb 10
 def createSelectionInfo():
     return widgets.HTML(value = "<h2>Info Pane</h2>\
                                 <p>This menu allows you to upload new manuscripts and access previously uploaded manuscripts.\
                                 The uploader will accept only .xml and image files.\
-                                For testing purposes, it only accepts images right now.<p>",)
+                                For testing purposes, it only accepts images right now.<p>",
+                       layout = widgets.Layout(max_width = '600px')
+                       )
 
-# %% ../01_selection.ipynb 12
+# %% ../01_selection.ipynb 18
 class Selection(param.Parameterized):
     
+    newManClicked = False
+    selectedManuscript = None
+    
+    # This is the output for the class
+    @param.output()
+    def selectionOutput(self):
+        return self.newManClicked, self.selectedManuscript
+    
+    
+    # This functions like the standard __init__ function
     def panel(self):
-        newMan = tealButton('New Manuscript')
-        selMan = blueButton('Select Manuscript')
+        self.newMan = tealButton('New Manuscript')
+        self.selMan = blueButton('Select Manuscript')
+        
+        # Binding buttons to functions that will be patched later
+        self.newMan.on_click(self.on_click_newMan)
+        self.selMan.on_click(self.on_click_selMan)
+        
+        buttons = pn.Row(self.newMan, self.selMan)
 
-        buttons = pn.Row(newMan, selMan)
+        self.selectionKey, self.manuscriptSelect = createManuscriptSelect()
 
-        manuscripts, selectionKey, manuscriptSelect = createManuscriptSelect()
-
-        selections = pn.Column(manuscriptSelect, buttons)
+        selections = pn.Column(self.manuscriptSelect, buttons)
         return pn.Row(createSelectionInfo(), selections)
 
-# %% ../01_selection.ipynb 16
-@patch_to(Selection)
-def handleSelection(change):
-    asdf = 'asdf'
+# %% ../01_selection.ipynb 20
+@patch
+def on_click_selMan(self:Selection, null):
+    self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
+
+# %% ../01_selection.ipynb 22
+@patch
+def on_click_newMan(self:Selection, null):
+    self.newManClicked = True
