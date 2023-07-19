@@ -23,7 +23,7 @@ def createManuscriptSelect():
         selectionKey[selectionNames[-1]] = manuscript
         
     manuscriptSelect = widgets.Select(options = selectionNames,
-                                      value = selectionNames[0],
+                                      value = 'Stavronikita Monastery Greek handwritten document Collection no.53',
                                       rows = 10,
                                       disabled = False,
                                       layout = widgets.Layout(height = 'auto',
@@ -46,10 +46,20 @@ def createSelectionInfo():
 class Selection(param.Parameterized):
     
     newManClicked = False
-    selectedManuscript = None
+    # Set this to a default manuscript ASAP
+    selectedManuscript = ['/home/dc/glyptodon/manuscripts/stvrnktmnstrygrkcllctnn.53',
+                          {'Work': 'Stavronikita Monastery Greek handwritten document Collection no.53',
+                           'Author': '',
+                           'Language': 'Greek',
+                           'Country': 'Greece',
+                           'City': 'Mount Athos',
+                           'Institution': 'Stavronikita Monastery',
+                           'Centuries': '14th Century'
+                          }
+                         ]
     
     # This is the output for the class
-    @param.output()
+    @param.output(('newManClicked', param.Boolean),('selectedManuscript', param.List))
     def selectionOutput(self):
         return self.newManClicked, self.selectedManuscript
     
@@ -63,7 +73,7 @@ class Selection(param.Parameterized):
         self.newMan.on_click(self.on_click_newMan)
         self.selMan.on_click(self.on_click_selMan)
         
-        buttons = pn.Row(self.newMan, self.selMan)
+        buttons = pn.Row(self.selMan, self.newMan)
 
         self.selectionKey, self.manuscriptSelect = createManuscriptSelect()
 
@@ -73,7 +83,7 @@ class Selection(param.Parameterized):
 # %% ../01_selection.ipynb 20
 @patch
 def on_click_selMan(self:Selection, null):
-    if self.selectedManuscript == None:
+    if len(self.selectedManuscript) == 0:
         self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
         self.selMan.description = 'Select Different Manuscript'
     else:
