@@ -42,7 +42,7 @@ def createSelectionInfo():
                        layout = widgets.Layout(max_width = '600px')
                        )
 
-# %% ../01_selection.ipynb 18
+# %% ../01_selection.ipynb 27
 class Selection(param.Parameterized):
     
     newManClicked = False
@@ -80,21 +80,17 @@ class Selection(param.Parameterized):
         selections = pn.Column(self.manuscriptSelect, buttons)
         return pn.Row(createSelectionInfo(), selections)
 
-# %% ../01_selection.ipynb 20
-@patch
-def on_click_selMan(self:Selection, null):
-    if len(self.selectedManuscript) == 0:
-        self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
-        self.selMan.description = 'Select Different Manuscript'
-    else:
-        self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
+    def on_click_selMan(self, null):
+        if len(self.selectedManuscript) == 0:
+            self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
+            self.selMan.description = 'Select Different Manuscript'
+        else:
+            self.selectedManuscript = self.selectionKey[self.manuscriptSelect.value]
 
-# %% ../01_selection.ipynb 22
-@patch
-def on_click_newMan(self:Selection, null):
-    if self.newManClicked == False:
-        self.newManClicked = True
-        self.newMan.description = "Don't Create Manuscript"
-    else:
-        self.newManClicked = False
-        self.newMan.description = 'Create Manuscript'
+    def on_click_newMan(self, null):
+        if self.newManClicked == False:
+            self.newManClicked = True
+            self.newMan.description = "Don't Create Manuscript"
+        else:
+            self.newManClicked = False
+            self.newMan.description = 'Create Manuscript'
