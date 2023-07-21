@@ -129,10 +129,6 @@ def saveImages(files:dict, targetDirectory):
         
     os.chdir(baseDirectory)
 
-# %% ../nbs/manuscriptFiles.ipynb 20
-def saveTranscript(files:dict, targetDirectory):
-        
-
 # %% ../nbs/manuscriptFiles.ipynb 27
 def currentManuscripts():
     # If this is run on any computer, it will have a unique file structure. This implementation works with that file structure.
