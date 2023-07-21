@@ -10,7 +10,6 @@ dependencies:
   - nbdev=2.3.12
   - fastcore=1.5.28
   - jupyterlab-unfold
-  - jupyterlab-git
 # App libraries
   - plotly=5.15.0 # For image annotation
   - dash # For app containment
@@ -18,3 +17,5 @@ dependencies:
   - pip
   - pip:
     - opencv-python # This has no conda options
+    - jupyterlab-code-formatter
+    - black
