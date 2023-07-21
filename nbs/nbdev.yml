@@ -4,6 +4,6 @@ project:
 website:
   title: "glyptodon"
   site-url: "https://Accessible-Data-and-Code.github.io/glyptodon"
-  description: "This is a manuscript annotation tool"
-  repo-branch: master
+  description: "glyptodon source code"
+  repo-branch: main
   repo-url: "https://github.com/Accessible-Data-and-Code/glyptodon"
