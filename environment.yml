@@ -1,0 +1,19 @@
+name: plotlyDev
+channels:
+  - conda-forge
+  - defaults
+  - plotly
+  - fastai
+dependencies:
+# Dev libraries
+  - jupyterlab
+  - nbdev=2.3.12
+  - fastcore=1.5.28
+  - jupyterlab-unfold
+  - jupyterlab-git
+# App libraries
+  - plotly=5.15.0
+  - pip
+  - pip: # Neither of these libraries has a conda install
+    - opencv-python
+    - dash
