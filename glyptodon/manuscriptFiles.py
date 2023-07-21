@@ -130,6 +130,10 @@ def saveImages(files:dict, targetDirectory):
     os.chdir(baseDirectory)
 
 # %% ../manuscriptFiles.ipynb 20
+def saveTranscript(files:dict, targetDirectory):
+        
+
+# %% ../manuscriptFiles.ipynb 27
 def currentManuscripts():
     # If this is run on any computer, it will have a unique file structure. This implementation works with that file structure.
     baseDirectory = os.getcwd()
@@ -162,7 +166,7 @@ def currentManuscripts():
     os.chdir(baseDirectory)
     return manuscriptMetadata
 
-# %% ../manuscriptFiles.ipynb 28
+# %% ../manuscriptFiles.ipynb 35
 def updateMetadata(directory, information):
     baseDirectory = os.getcwd()
     

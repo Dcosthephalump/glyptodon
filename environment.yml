@@ -12,8 +12,9 @@ dependencies:
   - jupyterlab-unfold
   - jupyterlab-git
 # App libraries
-  - plotly=5.15.0
+  - plotly=5.15.0 # For image annotation
+  - dash # For app containment
+  - dash-bootstrap-components # For website styling
   - pip
-  - pip: # Neither of these libraries has a conda install
-    - opencv-python
-    - dash
+  - pip:
+    - opencv-python # This has no conda options

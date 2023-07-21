@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "glyptodon"
+  site-url: "https://Accessible-Data-and-Code.github.io/glyptodon"
+  description: "This is a manuscript annotation tool"
+  repo-branch: master
+  repo-url: "https://github.com/Accessible-Data-and-Code/glyptodon"
