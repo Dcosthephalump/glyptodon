@@ -14,6 +14,8 @@ dependencies:
   - plotly=5.15.0 # For image annotation
   - dash # For app containment
   - dash-bootstrap-components # For website styling
+  - pandas
+  - numpy
   - pip
   - pip:
     - opencv-python # This has no conda options
