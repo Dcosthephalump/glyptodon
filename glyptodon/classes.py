@@ -27,7 +27,7 @@ def __init__(self: BBox, points: dict, lineNo=-1, index=-1):
 
 # %% ../nbs/05_classes.ipynb 14
 @patch
-def isLine(self: BBox, line: Line):
+def isLine(self: BBox, line):
     y = line.midpoint
     y0 = self.y0
     y1 = self.y1

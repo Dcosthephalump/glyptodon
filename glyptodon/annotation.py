@@ -10,7 +10,7 @@ import cv2
 
 # %% ../nbs/04_annotation.ipynb 7
 def createAnnotationTextArea():
-    return dcc.Textarea(id="annotation",value="Enter transcription text here!",style={"width":"100%","height":285})
+    return dcc.Textarea(id="annotation-text-area",value="Enter transcription text here!",style={"width":"100%","height":285})
 
 # %% ../nbs/04_annotation.ipynb 10
 def createPageSelector():

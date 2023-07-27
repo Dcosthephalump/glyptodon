@@ -20,7 +20,7 @@ def createManuscriptSelect():
     manuscriptSelect = dcc.RadioItems(
         options=selectionNames + ["Create New Manuscript"],
         value="Stavronikita Monastery Greek handwritten document Collection no.53",
-        id="manuscript_select",
+        id="manuscript-select",
     )
 
     return selectionKey, manuscriptSelect
