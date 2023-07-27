@@ -232,7 +232,6 @@ def manuscriptImages(targetDirectory):
     # It also keeps an index that can be accessed by the dropdown
     relativePaths = []
     for file in files:
-        index = len(relativePaths) + 1
-        relativePaths.append((index,os.path.join(relativeToImages, file)))
+        relativePaths.append(os.path.join(relativeToImages, file))
     
     return relativePaths
