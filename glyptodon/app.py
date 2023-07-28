@@ -3,12 +3,12 @@
 # %% auto 0
 __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelection', 'metadata', 'inputObjects', 'centuries',
            'centuriesSlider', 'uploadImages', 'uploadManuscripts', 'informationInfo', 'saveNContinue',
-           'annotationTextArea', 'pageSelector', 'exportInfo', 'exportName', 'directoryOptions', 'exportButton',
-           'exportDownload', 'app', 'newManuscript', 'selectedManuscript', 'selectManuscript',
-           'finalizeSelectionCallback', 'pageSelectorCallback']
+           'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'exportInfo', 'exportName',
+           'directoryOptions', 'exportButton', 'exportDownload', 'app', 'newManuscript', 'selectedManuscript',
+           'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback']
 
 # %% ../nbs/07_app.ipynb 4
-from dash import Dash, Input, Output, callback, dcc, html
+from dash import Dash, State, Input, Output, callback, dcc, html
 from .annotation import *
 from .classes import *
 from .export import *
@@ -16,6 +16,7 @@ from .information import *
 from .manuscriptFiles import *
 from .selection import *
 import re
+import os
 
 # %% ../nbs/07_app.ipynb 6
 #################
@@ -43,6 +44,8 @@ saveNContinue = createSaveNContinue()
 ##################
 annotationTextArea = createAnnotationTextArea()
 pageSelector = createPageSelector()
+saveShapes = createSaveShapes()
+saveAnnotation = createSaveAnnotation()
 
 
 ##############
@@ -108,6 +111,7 @@ app.layout = html.Div(
                     children=[
                         html.Div(
                             [
+                                pageSelector,
                                 dcc.Graph(
                                     id="annotation-figure",
                                     config={
@@ -122,8 +126,9 @@ app.layout = html.Div(
                                         "width": 800,
                                     },
                                 ),
-                                pageSelector,
+                                saveShapes,
                                 annotationTextArea,
+                                saveAnnotation,
                             ]
                         )
                     ],
@@ -146,6 +151,10 @@ app.layout = html.Div(
             ],
         ),
         html.Div(id="current-tab"),
+        html.Div(
+            id="dummy-output",
+            style={"display": "none"},
+        ),
     ]
 )
 
@@ -203,6 +212,7 @@ def selectManuscript(work):
 @callback(
     Output("page-selector", "options"),
     Output("page-selector", "value"),
+    Output("tabs-object","value"),
     Input("finalize-selection", "n_clicks"),
     prevent_initial_call=True,
 )
@@ -215,7 +225,7 @@ def finalizeSelectionCallback(clicks):
         dropdownOptions.append({"label": f"Page {index}", "value": path})
         index = index + 1
 
-    return dropdownOptions, "Page 1"
+    return dropdownOptions, dropdownOptions[0]["value"], "information"
 
 # %% ../nbs/07_app.ipynb 14
 @callback(
@@ -225,9 +235,118 @@ def finalizeSelectionCallback(clicks):
 )
 def pageSelectorCallback(path):
     fig = createAnnotationFigure(path)
+
+    imageName = path.split("/")[-1]  # This takes the file name in the directory
+    imageName = imageName.split(".")[0]  # This assumes
+
+    statesDirectory = os.path.join(selectedManuscript[0], "states")
+    linesDirectory = os.path.join(statesDirectory, "lines")
+    bboxesDirectory = os.path.join(statesDirectory, "bboxes")
     
+    # Instantiate lines from csv and add them to figure
+    for file in os.listdir(linesDirectory):
+        fileName = file.split(".")[0]
+        if fileName == imageName:
+            figLines = csvToLines(os.path.join(linesDirectory, file))
+
+            for line in figLines:
+                fig.add_shape(
+                    type=line.type,
+                    x0=line.x0,
+                    y0=line.y0,
+                    x1=line.x1,
+                    y1=line.y1,
+                    line=line.line,
+                    opactiy=line.opacity,
+                )
+
+    # Instantiate bboxes from csv and add them to figure
+    for file in os.listdir(bboxesDirectory):
+        fileName = file.split(".")[0]
+        if fileName == imageName:
+            figBBoxes = csvToBBoxes(os.path.join(bboxesDirectory, file))
+            
+            for bbox in figBBoxes:
+                fig.add_shape(
+                    type=bbox.type,
+                    x0=bbox.x0,
+                    y0=bbox.y0,
+                    x1=bbox.x1,
+                    y1=bbox.y1,
+                    line=bbox.line,
+                    opacity=bbox.opacity,
+                )
+
     return fig
 
-# %% ../nbs/07_app.ipynb 17
+# %% ../nbs/07_app.ipynb 16
+@callback(
+    Output("dummy-output","children"),
+    Input("save-shapes", "n_clicks"),
+    State("annotation-figure", "relayoutData"),
+    State("page-selector", "value"),
+    prevent_initial_call=True,
+)
+def saveShapesCallback(clicks, shapes, path):
+    dictLines = []
+    dictBBoxes = []
+    for shape in shapes:
+        if shape["type"] == "line":
+            dictLines.append(shape)
+        if shape["type"] == "rect":
+            dictBBoxes.append(shape)
+
+    bboxes = []
+    lines = []
+    for line in dictLines:
+        bboxes.append([])
+        lines.append(
+            Line(
+                x0=int(line["x0"]),
+                y0=int(line["y0"]),
+                x1=int(line["x1"]),
+                y1=int(line["y1"]),
+            )
+        )
+
+    Line.sortLines(lines)
+
+    tempBBoxes = []
+    for bbox in dictBBoxes:
+        tempBBoxes.append(
+            BBox(
+                x0=int(bbox["x0"]),
+                y0=int(bbox["y0"]),
+                x1=int(bbox["x1"]),
+                y1=int(bbox["y1"]),
+            )
+        )
+
+    for line in lines:
+        for bbox in tempBBoxes:
+            if bbox.isLine(line):
+                bboxes[line.index - 1].append(bbox)
+
+    flattenedBBoxes = []
+    for line in bboxes:
+        BBox.sortBBoxes(line)
+        flattenedBBoxes = flattenedBBoxes + line
+
+    fig = createAnnotationFigure(path)
+
+    imageName = path.split("/")[-1]  # This takes the file name in the directory
+    imageName = imageName.split(".")[0]  # This assumes
+
+    statesDirectory = os.path.join(selectedManuscript[0], "states")
+    linesDirectory = os.path.join(statesDirectory, "lines")
+    bboxesDirectory = os.path.join(statesDirectory, "bboxes")
+
+    Line.linesToCSV(linesDirectory, lines, imageName)
+    BBox.bboxesToCSV(bboxesDirectory, flattenedBBoxes, imageName)
+    
+    dummy = ["1","2","3"]
+    return dummy
+
+# %% ../nbs/07_app.ipynb 19
 if __name__ == "__main__":
     app.run(debug=True)

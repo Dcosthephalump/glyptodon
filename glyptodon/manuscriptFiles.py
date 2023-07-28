@@ -44,6 +44,13 @@ def createManuscriptDirectory(metadata:dict):
     for data in printable:
         f.write(data + '\n')
     
+    # Moves into 'states' directory to add line and bbox folders
+    os.chdir(statesDirectory)
+    linesDirectory = os.path.join(statesDirectory, 'lines')
+    os.mkdir(linesDirectory)
+    bboxesDirectory = os.path.join(statesDirectory, 'bboxes')
+    os.mkdir(bboxesDirectory)
+    
     os.chdir(baseDirectory)
     
     return manuscriptDirectory
@@ -81,7 +88,8 @@ def directoryNameClean(string):
         string = string + word
     
     # This loop removes any of the illegal characters for directories
-    illegalChars = ['\\','#','%','&','{','}','<','>','*','?','/',' ','$','!',"'",'"',':','@','+','`','|','=']
+    # It also removes periods as a stylistic choice (file extensions are found at periods)
+    illegalChars = ['\\','#','%','&','{','}','<','>','*','?','/',' ','$','!',"'",'"',':','@','+','`','|','=','.']
     for char in illegalChars:
         removalCount = 0
         numChars = len(string)
