@@ -5,7 +5,8 @@ __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelecti
            'centuriesSlider', 'uploadImages', 'uploadManuscripts', 'informationInfo', 'saveNContinue',
            'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'exportInfo', 'exportName',
            'directoryOptions', 'exportButton', 'exportDownload', 'app', 'newManuscript', 'selectedManuscript',
-           'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback']
+           'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
+           'lineNumberCallback']
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
@@ -152,6 +153,7 @@ app.layout = html.Div(
         ),
         html.Div(id="current-tab"),
         html.Div(
+            children="no callback",
             id="dummy-output",
             style={"display": "none"},
         ),
@@ -181,7 +183,7 @@ def selectManuscript(work):
     if work == "Create New Manuscript":
         newManuscript = True
         selectedManuscript = None
-        return "", "", "", "", "", "", [1, 20], {"display": "none"}
+        return "", "", "", "", "", "", [1, 20], {"display": "block"}
     else:
         selectedManuscript = selectionKey[work]
         work = selectedManuscript[1]["Work"]
@@ -206,7 +208,7 @@ def selectManuscript(work):
                 int(re.sub("[^0-9]", "", centuriesAsList[0])),
                 int(re.sub("[^0-9]", "", centuriesAsList[2])),
             ]
-        return work, author, language, country, city, institution, centuriesValue, {"display": "block"}
+        return work, author, language, country, city, institution, centuriesValue, {"display": "none"}
 
 # %% ../nbs/07_app.ipynb 12
 @callback(
@@ -222,8 +224,10 @@ def finalizeSelectionCallback(clicks):
 
     index = 1
     for path in relativePaths:
-        dropdownOptions.append({"label": f"Page {index}", "value": path})
-        index = index + 1
+        imageName = path.split("/")[-1]
+        if imageName[0] != ".":
+            dropdownOptions.append({"label": f"Page {index}", "value": path})
+            index = index + 1
 
     return dropdownOptions, dropdownOptions[0]["value"], "information"
 
@@ -247,7 +251,7 @@ def pageSelectorCallback(path):
     for file in os.listdir(linesDirectory):
         fileName = file.split(".")[0]
         if fileName == imageName:
-            figLines = csvToLines(os.path.join(linesDirectory, file))
+            figLines = Line.csvToLines(os.path.join(linesDirectory, file))
 
             for line in figLines:
                 fig.add_shape(
@@ -257,14 +261,14 @@ def pageSelectorCallback(path):
                     x1=line.x1,
                     y1=line.y1,
                     line=line.line,
-                    opactiy=line.opacity,
+                    opacity=line.opacity,
                 )
 
     # Instantiate bboxes from csv and add them to figure
     for file in os.listdir(bboxesDirectory):
         fileName = file.split(".")[0]
         if fileName == imageName:
-            figBBoxes = csvToBBoxes(os.path.join(bboxesDirectory, file))
+            figBBoxes = BBox.csvToBBoxes(os.path.join(bboxesDirectory, file))
             
             for bbox in figBBoxes:
                 fig.add_shape(
@@ -290,27 +294,25 @@ def pageSelectorCallback(path):
 def saveShapesCallback(clicks, shapes, path):
     dictLines = []
     dictBBoxes = []
-    for shape in shapes:
+    for shape in shapes["shapes"]:
         if shape["type"] == "line":
             dictLines.append(shape)
         if shape["type"] == "rect":
             dictBBoxes.append(shape)
-
-    bboxes = []
+    
     lines = []
     for line in dictLines:
         bboxes.append([])
         lines.append(
             Line(
-                x0=int(line["x0"]),
-                y0=int(line["y0"]),
-                x1=int(line["x1"]),
-                y1=int(line["y1"]),
+                x0=line["x0"],
+                y0=line["y0"],
+                x1=line["x1"],
+                y1=line["y1"],
             )
         )
-
     Line.sortLines(lines)
-
+    
     tempBBoxes = []
     for bbox in dictBBoxes:
         tempBBoxes.append(
@@ -322,20 +324,20 @@ def saveShapesCallback(clicks, shapes, path):
             )
         )
 
+    bboxes = []
     for line in lines:
+        bboxes.append([])
         for bbox in tempBBoxes:
             if bbox.isLine(line):
-                bboxes[line.index - 1].append(bbox)
+                bboxes[-1].append(bbox)
 
     flattenedBBoxes = []
     for line in bboxes:
         BBox.sortBBoxes(line)
         flattenedBBoxes = flattenedBBoxes + line
 
-    fig = createAnnotationFigure(path)
-
-    imageName = path.split("/")[-1]  # This takes the file name in the directory
-    imageName = imageName.split(".")[0]  # This assumes
+    imageName = path.split("/")[-1]
+    imageName = imageName.split(".")[0]
 
     statesDirectory = os.path.join(selectedManuscript[0], "states")
     linesDirectory = os.path.join(statesDirectory, "lines")
@@ -347,6 +349,20 @@ def saveShapesCallback(clicks, shapes, path):
     dummy = ["1","2","3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 19
+# %% ../nbs/07_app.ipynb 18
+@callback(
+    Output("annotation-text-area","value"),
+    Input("annotation-figure", "relayoutData"),
+    prevent_initial_call=True,
+)
+def lineNumberCallback(shapes):
+    numLines = 0
+    for shape in shapes["shapes"]:
+        if shape["type"] == "line":
+            numLines = numLines + 1
+    
+    return str(numLines)
+
+# %% ../nbs/07_app.ipynb 21
 if __name__ == "__main__":
     app.run(debug=True)

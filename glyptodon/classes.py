@@ -17,13 +17,13 @@ class BBox:
 # %% ../nbs/05_classes.ipynb 11
 @patch
 def __init__(self: BBox, x0, y0, x1, y1, lineNo=-1, index=-1, annotation="none"):
-    self.x0 = x0
-    self.y0 = y0
-    self.x1 = x1
-    self.y1 = y1
+    self.x0 = int(x0)
+    self.y0 = int(y0)
+    self.x1 = int(x1)
+    self.y1 = int(y1)
     self.midpoint = (self.x0 + self.x1) / 2
-    self.lineNo = lineNo
-    self.index = index
+    self.lineNo = int(lineNo)
+    self.index = int(index)
     self.annotation = annotation
 
 # %% ../nbs/05_classes.ipynb 14
@@ -56,14 +56,14 @@ def __eq__(self:BBox, other:BBox):
 
 # %% ../nbs/05_classes.ipynb 18
 @patch_to(BBox, cls_method=True)
-def sortBBoxes(bboxList):
+def sortBBoxes(cls, bboxList):
     size = len(bboxList)
     
     for i in range(size):
         minimum = i
         minValueI = bboxList[minimum]
         
-        for j in range(j+1, size):
+        for j in range(i+1, size):
             if bboxList[j] < bboxList[minimum]:
                 minimum = j
                 minValueJ = bboxList[minimum]
@@ -81,7 +81,7 @@ def sortBBoxes(bboxList):
 
 # %% ../nbs/05_classes.ipynb 20
 @patch_to(BBox, cls_method=True)
-def bboxesToCSV(targetDirectory, bboxes, fileName):
+def bboxesToCSV(cls, targetDirectory, bboxes, fileName):
     baseDirectory = os.getcwd()
     os.chdir(targetDirectory)
     
@@ -98,8 +98,9 @@ def bboxesToCSV(targetDirectory, bboxes, fileName):
 
 # %% ../nbs/05_classes.ipynb 22
 @patch_to(BBox, cls_method=True)
-def csvToLines(targetFile):
-    csvReader = csv.reader(targetFile, delimiter=",")
+def csvToBBoxes(cls, targetFile):
+    f = open(targetFile)
+    csvReader = csv.reader(f, delimiter=",")
 
     bboxes = []
     for row in csvReader:
@@ -119,12 +120,12 @@ class Line:
 # %% ../nbs/05_classes.ipynb 26
 @patch
 def __init__(self: Line, x0, y0, x1, y1, index=-1):
-    self.x0 = x0
-    self.y0 = y0
-    self.x1 = x1
-    self.y1 = y1
+    self.x0 = int(x0)
+    self.y0 = int(y0)
+    self.x1 = int(x1)
+    self.y1 = int(y1)
     self.midpoint = (self.y0 + self.y1) / 2
-    self.index = index
+    self.index = int(index)
 
 # %% ../nbs/05_classes.ipynb 28
 @patch
@@ -141,14 +142,14 @@ def __eq__(self:Line, other:Line):
 
 # %% ../nbs/05_classes.ipynb 30
 @patch_to(Line, cls_method=True)
-def sortLines(lineList):
+def sortLines(cls, lineList: list):
     size = len(lineList)
     
     for i in range(size):
         minimum = i
         minValueI = lineList[minimum]
         
-        for j in range(j+1, size):
+        for j in range(i+1, size):
             if lineList[j] < lineList[minimum]:
                 minimum = j
                 minValueJ = lineList[minimum]
@@ -166,7 +167,7 @@ def sortLines(lineList):
 
 # %% ../nbs/05_classes.ipynb 32
 @patch_to(Line, cls_method=True)
-def linesToCSV(targetDirectory, lines, fileName):
+def linesToCSV(cls, targetDirectory, lines, fileName):
     baseDirectory = os.getcwd()
     os.chdir(targetDirectory)
     
@@ -183,8 +184,9 @@ def linesToCSV(targetDirectory, lines, fileName):
 
 # %% ../nbs/05_classes.ipynb 34
 @patch_to(Line, cls_method=True)
-def csvToLines(targetFile):
-    csvReader = csv.reader(targetFile, delimiter=",")
+def csvToLines(cls, targetFile):
+    f = open(targetFile)
+    csvReader = csv.reader(f, delimiter=",")
 
     lines = []
     for row in csvReader:
