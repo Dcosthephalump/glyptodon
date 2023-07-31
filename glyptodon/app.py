@@ -255,6 +255,7 @@ def pageSelectorCallback(path):
 
             for line in figLines:
                 fig.add_shape(
+                    editable = True,
                     type=line.type,
                     x0=line.x0,
                     y0=line.y0,
@@ -272,6 +273,7 @@ def pageSelectorCallback(path):
             
             for bbox in figBBoxes:
                 fig.add_shape(
+                    editable = True,
                     type=bbox.type,
                     x0=bbox.x0,
                     y0=bbox.y0,
@@ -353,15 +355,36 @@ def saveShapesCallback(clicks, shapes, path):
 @callback(
     Output("annotation-text-area","value"),
     Input("annotation-figure", "relayoutData"),
+    State("annotation-text-area","value"),
     prevent_initial_call=True,
 )
-def lineNumberCallback(shapes):
+def lineNumberCallback(shapes, currentText):
     numLines = 0
     for shape in shapes["shapes"]:
         if shape["type"] == "line":
             numLines = numLines + 1
     
-    return str(numLines)
+    currentLines = currentText.split("\n")
+    newLines = []
+    for i in range(1,numLines+1):
+        if i > len(currentLines):
+            if i < 10:
+                newLines.append(f"0{i}:\n")
+            else:
+                newLines.append(f"{i}:\n")
+        else:
+            if currentLines[i-1][0:2].isnumeric() and int(currentLines[i-1][0:2]) == i:
+                newLines.append(currentLines[i-1] + "\n")
+            elif i < 10:
+                newLines.append(f"0{i}:\n")
+            else:
+                newLines.append(f"{i}:\n")
+    
+    newValue = ""
+    for line in newLines:
+        newValue = newValue + newLines
+    
+    return newValue
 
 # %% ../nbs/07_app.ipynb 21
 if __name__ == "__main__":
