@@ -104,9 +104,20 @@ def csvToBBoxes(cls, targetFile):
 
     bboxes = []
     for row in csvReader:
-        bbox = BBox(
-            x0=row[0], y0=row[1], x1=row[2], y1=row[3], lineNo=row[4], index=row[5], annotation=row[6]
-        )
+        if len(row) == 7:
+            bbox = BBox(
+                x0=row[0],
+                y0=row[1],
+                x1=row[2],
+                y1=row[3],
+                lineNo=row[4],
+                index=row[5],
+                annotation=row[6],
+            )
+        else:
+            bbox = BBox(
+                x0=row[0], y0=row[1], x1=row[2], y1=row[3], lineNo=row[4], index=row[5]
+            )
         bboxes.append(bbox)
 
     return bboxes
@@ -119,13 +130,14 @@ class Line:
 
 # %% ../nbs/05_classes.ipynb 26
 @patch
-def __init__(self: Line, x0, y0, x1, y1, index=-1):
+def __init__(self: Line, x0, y0, x1, y1, index=-1, text="none"):
     self.x0 = int(x0)
     self.y0 = int(y0)
     self.x1 = int(x1)
     self.y1 = int(y1)
     self.midpoint = (self.y0 + self.y1) / 2
     self.index = int(index)
+    self.text = text
 
 # %% ../nbs/05_classes.ipynb 28
 @patch
@@ -178,7 +190,7 @@ def linesToCSV(cls, targetDirectory, lines, fileName):
     f = open(fileName + ".csv", "w", newline="")
     writer = csv.writer(f)
     for line in lines:
-        writer.writerow([line.x0, line.y0, line.x1, line.y1, line.index])
+        writer.writerow([line.x0, line.y0, line.x1, line.y1, line.index, line.text])
 
     os.chdir(baseDirectory)
 
@@ -190,7 +202,12 @@ def csvToLines(cls, targetFile):
 
     lines = []
     for row in csvReader:
-        line = Line(x0=row[0], y0=row[1], x1=row[2], y1=row[3], index=row[4])
+        if len(row) == 6:
+            line = Line(
+                x0=row[0], y0=row[1], x1=row[2], y1=row[3], index=row[4], text=row[5]
+            )
+        else:
+            line = Line(x0=row[0], y0=row[1], x1=row[2], y1=row[3], index=row[4])
         lines.append(line)
-        
+
     return lines

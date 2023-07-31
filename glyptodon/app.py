@@ -6,7 +6,7 @@ __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelecti
            'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'exportInfo', 'exportName',
            'directoryOptions', 'exportButton', 'exportDownload', 'app', 'newManuscript', 'selectedManuscript',
            'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
-           'lineNumberCallback']
+           'lineNumberCallback', 'saveAnnotationCallback']
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
@@ -287,7 +287,7 @@ def pageSelectorCallback(path):
 
 # %% ../nbs/07_app.ipynb 16
 @callback(
-    Output("dummy-output","children"),
+    Output("dummy-output","children", allow_duplicate=True),
     Input("save-shapes", "n_clicks"),
     State("annotation-figure", "relayoutData"),
     State("page-selector", "value"),
@@ -304,7 +304,6 @@ def saveShapesCallback(clicks, shapes, path):
     
     lines = []
     for line in dictLines:
-        bboxes.append([])
         lines.append(
             Line(
                 x0=line["x0"],
@@ -382,10 +381,91 @@ def lineNumberCallback(shapes, currentText):
     
     newValue = ""
     for line in newLines:
-        newValue = newValue + newLines
+        newValue = newValue + line
     
     return newValue
 
-# %% ../nbs/07_app.ipynb 21
+# %% ../nbs/07_app.ipynb 20
+@callback(
+    Output("dummy-output","children", allow_duplicate=True),
+    Input("save-annotation", "n_clicks"),
+    State("annotation-figure", "relayoutData"),
+    State("page-selector", "value"),
+    State("annotation-text-area","value"),
+    prevent_initial_call=True,
+)
+def saveAnnotationCallback(clicks, shapes, path, currentText):
+    dictLines = []
+    dictBBoxes = []
+    for shape in shapes["shapes"]:
+        if shape["type"] == "line":
+            dictLines.append(shape)
+        if shape["type"] == "rect":
+            dictBBoxes.append(shape)
+    
+    currentLines = currentText.split("\n")
+    currentWords = []
+    for line in currentLines:
+        currentWords.append(line.split(" "))
+    
+    lines = []
+    for line in dictLines:
+        lines.append(
+            Line(
+                x0=line["x0"],
+                y0=line["y0"],
+                x1=line["x1"],
+                y1=line["y1"],
+            )
+        )
+    Line.sortLines(lines)
+    
+    for line in lines:
+        line.text = currentLines[line.index - 1][4:]
+    
+    tempBBoxes = []
+    for bbox in dictBBoxes:
+        tempBBoxes.append(
+            BBox(
+                x0=int(bbox["x0"]),
+                y0=int(bbox["y0"]),
+                x1=int(bbox["x1"]),
+                y1=int(bbox["y1"]),
+            )
+        )
+
+    bboxes = []
+    for line in lines:
+        bboxes.append([])
+        for bbox in tempBBoxes:
+            if bbox.isLine(line):
+                bboxes[-1].append(bbox)
+    
+    flattenedBBoxes = []
+    for line in bboxes:
+        BBox.sortBBoxes(line)
+        flattenedBBoxes = flattenedBBoxes + line
+
+    for line in bboxes:
+        if len(line) == 0:
+            pass
+        elif len (line) == len(currentWords[line[0].lineNo - 1]):
+            for bbox in line:
+                bbox.annotation = currentWords[bbox.lineNo -1][bbox.index -1]
+
+    imageName = path.split("/")[-1]
+    imageName = imageName.split(".")[0]
+
+    statesDirectory = os.path.join(selectedManuscript[0], "states")
+    linesDirectory = os.path.join(statesDirectory, "lines")
+    bboxesDirectory = os.path.join(statesDirectory, "bboxes")
+
+    Line.linesToCSV(linesDirectory, lines, imageName)
+    BBox.bboxesToCSV(bboxesDirectory, flattenedBBoxes, imageName)
+    
+    dummy = ["1","2","3"]
+    return dummy
+
+# %% ../nbs/07_app.ipynb 23
 if __name__ == "__main__":
     app.run(debug=True)
