@@ -11,7 +11,7 @@ from .information import labeledInput
 def createExportInfo():
     return dcc.Markdown(
         """
-    # Information
+    # Export
     
     This menu allows you to export the manuscript and transcriptions you've worked on as a zipped folder.
     

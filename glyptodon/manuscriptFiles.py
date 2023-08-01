@@ -124,12 +124,16 @@ def directoryNameClean(string):
     return string.lower()
 
 # %% ../nbs/01_manuscriptFiles.ipynb 16
-def saveImages(contents: list, filenames: list, targetDirectory):
+def saveImages(contents, filenames, targetDirectory):
     # This function saves content from memory into storage using the keys in the passed files dict (from a FileUpload widget)
     # This
     baseDirectory = os.getcwd()
     os.chdir(os.path.join(targetDirectory, "images"))
-
+    
+    if type(contents) != list:
+        contents = [contents]
+        filenames = [filenames]
+    
     for i in range(0, len(contents)):
         string64 = contents[i].encode("utf8").split(b";base64,")[1]
         imdata = base64.b64decode(string64)
@@ -177,7 +181,11 @@ def zipManuscript(directoryOptions: list, manuscriptDirectory, name: str):
     import zipfile
     # standard call here to avoid getting the system lost in directories
     baseDirectory = os.getcwd()
-
+    
+    lowerOptions = []
+    for option in directoryOptions:
+        lowerOptions.append(option.lower())
+    
     files = []
     for path in os.listdir(manuscriptDirectory):
         # this deletes any currently zipped folder
@@ -185,10 +193,18 @@ def zipManuscript(directoryOptions: list, manuscriptDirectory, name: str):
             os.remove(os.path.join(manuscriptDirectory, path))
         
         # this collects all the files inside option folders
-        if path in directoryOptions:
-            tempDirectory = os.path.join(manuscriptDirectory, path)
-            for file in os.listdir(tempDirectory):
-                files.append(os.path.join(tempDirectory, file))
+        if path in lowerOptions:
+            if path == "states":
+                tempDirectoryStates = os.path.join(manuscriptDirectory, path)
+                for statesPath in os.listdir(tempDirectoryStates):
+                    if statesPath in ["bboxes","lines"]:
+                        tempDirectory = os.path.join(tempDirectoryStates, statesPath)
+                        for file in os.listdir(tempDirectory):
+                            files.append(os.path.join(tempDirectory, file))
+            else:
+                tempDirectory = os.path.join(manuscriptDirectory, path)
+                for file in os.listdir(tempDirectory):
+                    files.append(os.path.join(tempDirectory, file))
     
     # this zips the collected files
     os.chdir(manuscriptDirectory)
@@ -215,7 +231,6 @@ def updateMetadata(directory, information):
             f = open(file, 'w')
             printable = dictToList(information)
             for data in printable:
-                print(data)
                 f.write(data + '\n')
     
     os.chdir(baseDirectory)

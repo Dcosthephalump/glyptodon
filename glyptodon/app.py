@@ -3,10 +3,11 @@
 # %% auto 0
 __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelection', 'metadata', 'inputObjects', 'centuries',
            'centuriesSlider', 'uploadImages', 'uploadManuscripts', 'informationInfo', 'saveNContinue',
-           'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'exportInfo', 'exportName',
+           'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'nextTab', 'exportInfo', 'exportName',
            'directoryOptions', 'exportButton', 'exportDownload', 'app', 'newManuscript', 'selectedManuscript',
-           'testVar', 'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
-           'lineNumberCallback', 'saveAnnotationCallback', 'saveNContinuteCallback']
+           'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
+           'lineNumberCallback', 'saveAnnotationCallback', 'saveNContinuteCallback', 'nextTabCallback',
+           'exportManuscriptCallback']
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
@@ -47,6 +48,7 @@ annotationTextArea = createAnnotationTextArea()
 pageSelector = createPageSelector()
 saveShapes = createSaveShapes()
 saveAnnotation = createSaveAnnotation()
+nextTab = createNextTab()
 
 
 ##############
@@ -130,6 +132,7 @@ app.layout = html.Div(
                                 saveShapes,
                                 annotationTextArea,
                                 saveAnnotation,
+                                nextTab,
                             ]
                         )
                     ],
@@ -179,6 +182,7 @@ selectedManuscript = selectionKey[
     suppress_callback_exceptions=True,
 )
 def selectManuscript(work):
+    global selectedManuscript
     if work == "Create New Manuscript":
         newManuscript = True
         selectedManuscript = None
@@ -218,6 +222,7 @@ def selectManuscript(work):
     prevent_initial_call=True,
 )
 def finalizeSelectionCallback(clicks):
+    global selectedManuscript
     dropdownOptions = []
     relativePaths = manuscriptImages(selectedManuscript[0])
 
@@ -237,6 +242,7 @@ def finalizeSelectionCallback(clicks):
     prevent_initial_call=True,
 )
 def pageSelectorCallback(path):
+    global selectedManuscript
     fig = createAnnotationFigure(path)
 
     imageName = path.split("/")[-1]  # This takes the file name in the directory
@@ -293,6 +299,7 @@ def pageSelectorCallback(path):
     prevent_initial_call=True,
 )
 def saveShapesCallback(clicks, shapes, path):
+    global selectedManuscript
     dictLines = []
     dictBBoxes = []
     for shape in shapes["shapes"]:
@@ -394,6 +401,7 @@ def lineNumberCallback(shapes, currentText):
     prevent_initial_call=True,
 )
 def saveAnnotationCallback(clicks, shapes, path, currentText):
+    global selectedManuscript
     dictLines = []
     dictBBoxes = []
     for shape in shapes["shapes"]:
@@ -466,8 +474,6 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
     return dummy
 
 # %% ../nbs/07_app.ipynb 22
-print(selectedManuscript)
-testVar = 1
 @callback(
     Output("tabs-object", "value", allow_duplicate=True),
     Input("save-and-continue", "n_clicks"),
@@ -503,8 +509,7 @@ def saveNContinuteCallback(
     #    manFilenames,
     manSelect, # State manuscript-select
 ):
-    print(testVar)
-    print(selectedManuscript)
+    global selectedManuscript
     centuriesData = ""
     if centuriesValue[0] == centuriesValue[1]:
         centuriesData = centuries[centuriesValue[0]] + " Century"
@@ -535,5 +540,27 @@ def saveNContinuteCallback(
     return "annotation"
 
 # %% ../nbs/07_app.ipynb 24
+@callback(
+    Output("tabs-object", "value", allow_duplicate=True),
+    Input("next-tab", "n_clicks"),
+    prevent_initial_call=True,
+)
+def nextTabCallback(clicks):
+    return "export"
+
+# %% ../nbs/07_app.ipynb 26
+@callback(
+    Output("export-download", "data"),
+    Input("export-button", "n_clicks"),
+    State("export-name", "value"),
+    State("directory-options", "value"),
+    prevent_initial_call=True,
+)
+def exportManuscriptCallback(clicks, name, options):
+    global selectedManuscript
+    path = zipManuscript(options, selectedManuscript[0], name)
+    return dcc.send_file(path)
+
+# %% ../nbs/07_app.ipynb 28
 if __name__ == "__main__":
     app.run(debug=True)
