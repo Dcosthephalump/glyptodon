@@ -40,6 +40,7 @@ def createCenturiesSlider():
         value=[1, 20],
         id="centuries-slider",
         marks=None,
+        tooltip={"placement": "bottom", "always_visible": True}
     )
 
     return centuries, html.Div([html.Label(children="Centuries"),centuriesSlider])

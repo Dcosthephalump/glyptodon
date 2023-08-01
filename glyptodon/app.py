@@ -11,6 +11,7 @@ __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelecti
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
+import dash_bootstrap_components as dbc
 from .annotation import *
 from .classes import *
 from .export import *
@@ -125,7 +126,7 @@ app.layout = html.Div(
                                         ]
                                     },
                                     style={
-                                        "height": 900,
+                                        "height": 800,
                                         "width": 800,
                                     },
                                 ),
