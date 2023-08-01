@@ -10,6 +10,8 @@ import io
 import cv2
 import re
 import numpy as np
+import base64
+from PIL import Image
 
 # %% ../nbs/01_manuscriptFiles.ipynb 5
 def createManuscriptDirectory(metadata:dict):
@@ -121,25 +123,23 @@ def directoryNameClean(string):
     
     return string.lower()
 
-# %% ../nbs/01_manuscriptFiles.ipynb 15
-def saveImages(files:dict, targetDirectory):
+# %% ../nbs/01_manuscriptFiles.ipynb 16
+def saveImages(contents: list, filenames: list, targetDirectory):
     # This function saves content from memory into storage using the keys in the passed files dict (from a FileUpload widget)
-    # This 
+    # This
     baseDirectory = os.getcwd()
-    os.chdir(os.path.join(targetDirectory, 'images'))
+    os.chdir(os.path.join(targetDirectory, "images"))
+
+    for i in range(0, len(contents)):
+        string64 = contents[i].encode("utf8").split(b";base64,")[1]
+        imdata = base64.b64decode(string64)
+        pilImage = Image.open(io.BytesIO(imdata))
+        cv2Image = cv2.cvtColor(np.array(pilImage), cv2.COLOR_BGR2RGB)
+        cv2.imwrite("test" + filenames[i], cv2Image)
     
-    # Not sure what exactly this does, this is what I borrowed
-    for i in range(len(files)):
-        # I think this takes the content from the memory marker and reads it into Python readable code
-        img_stream = io.BytesIO(files[i]['content'])
-        # I have no clue why Numpy is needed here (probably some ungodly matrices and formats), but this turns the data into a cv2 readable image
-        img = cv2.imdecode(np.frombuffer(img_stream.read(), np.uint8), 1)
-        # This writes an image to some target directory
-        cv2.imwrite(files[i]['name'], img)
-        
     os.chdir(baseDirectory)
 
-# %% ../nbs/01_manuscriptFiles.ipynb 27
+# %% ../nbs/01_manuscriptFiles.ipynb 26
 def currentManuscripts():
     # If this is run on any computer, it will have a unique file structure. This implementation works with that file structure.
     baseDirectory = os.getcwd()
@@ -172,7 +172,7 @@ def currentManuscripts():
     os.chdir(baseDirectory)
     return manuscriptMetadata
 
-# %% ../nbs/01_manuscriptFiles.ipynb 30
+# %% ../nbs/01_manuscriptFiles.ipynb 29
 def zipManuscript(directoryOptions: list, manuscriptDirectory, name: str):
     import zipfile
     # standard call here to avoid getting the system lost in directories
@@ -205,7 +205,7 @@ def zipManuscript(directoryOptions: list, manuscriptDirectory, name: str):
 
     return os.path.join(manuscriptDirectory, name + ".zip")
 
-# %% ../nbs/01_manuscriptFiles.ipynb 33
+# %% ../nbs/01_manuscriptFiles.ipynb 32
 def updateMetadata(directory, information):
     baseDirectory = os.getcwd()
     
@@ -220,7 +220,7 @@ def updateMetadata(directory, information):
     
     os.chdir(baseDirectory)
 
-# %% ../nbs/01_manuscriptFiles.ipynb 36
+# %% ../nbs/01_manuscriptFiles.ipynb 35
 def manuscriptImages(targetDirectory):
     baseDirectory = os.getcwd()
     # Now, getting a relative pathway to the manuscript

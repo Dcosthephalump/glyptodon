@@ -5,8 +5,8 @@ __all__ = ['selectionKey', 'manuscriptSelect', 'selectionInfo', 'finalizeSelecti
            'centuriesSlider', 'uploadImages', 'uploadManuscripts', 'informationInfo', 'saveNContinue',
            'annotationTextArea', 'pageSelector', 'saveShapes', 'saveAnnotation', 'exportInfo', 'exportName',
            'directoryOptions', 'exportButton', 'exportDownload', 'app', 'newManuscript', 'selectedManuscript',
-           'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
-           'lineNumberCallback', 'saveAnnotationCallback']
+           'testVar', 'selectManuscript', 'finalizeSelectionCallback', 'pageSelectorCallback', 'saveShapesCallback',
+           'lineNumberCallback', 'saveAnnotationCallback', 'saveNContinuteCallback']
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
@@ -166,7 +166,6 @@ selectedManuscript = selectionKey[
     "Stavronikita Monastery Greek handwritten document Collection no.53"
 ]
 
-
 @callback(
     Output("work", "placeholder",),
     Output("author", "placeholder",),
@@ -214,7 +213,7 @@ def selectManuscript(work):
 @callback(
     Output("page-selector", "options"),
     Output("page-selector", "value"),
-    Output("tabs-object","value"),
+    Output("tabs-object","value", allow_duplicate=True),
     Input("finalize-selection", "n_clicks"),
     prevent_initial_call=True,
 )
@@ -387,11 +386,11 @@ def lineNumberCallback(shapes, currentText):
 
 # %% ../nbs/07_app.ipynb 20
 @callback(
-    Output("dummy-output","children", allow_duplicate=True),
+    Output("dummy-output", "children", allow_duplicate=True),
     Input("save-annotation", "n_clicks"),
     State("annotation-figure", "relayoutData"),
     State("page-selector", "value"),
-    State("annotation-text-area","value"),
+    State("annotation-text-area", "value"),
     prevent_initial_call=True,
 )
 def saveAnnotationCallback(clicks, shapes, path, currentText):
@@ -402,12 +401,12 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
             dictLines.append(shape)
         if shape["type"] == "rect":
             dictBBoxes.append(shape)
-    
+
     currentLines = currentText.split("\n")
     currentWords = []
     for line in currentLines:
-        currentWords.append(line.split(" "))
-    
+        currentWords.append(line[4:].split(" "))
+
     lines = []
     for line in dictLines:
         lines.append(
@@ -419,10 +418,10 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
             )
         )
     Line.sortLines(lines)
-    
+
     for line in lines:
         line.text = currentLines[line.index - 1][4:]
-    
+
     tempBBoxes = []
     for bbox in dictBBoxes:
         tempBBoxes.append(
@@ -440,7 +439,7 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
         for bbox in tempBBoxes:
             if bbox.isLine(line):
                 bboxes[-1].append(bbox)
-    
+
     flattenedBBoxes = []
     for line in bboxes:
         BBox.sortBBoxes(line)
@@ -449,9 +448,9 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
     for line in bboxes:
         if len(line) == 0:
             pass
-        elif len (line) == len(currentWords[line[0].lineNo - 1]):
+        elif len(line) == len(currentWords[line[0].lineNo - 1]):
             for bbox in line:
-                bbox.annotation = currentWords[bbox.lineNo -1][bbox.index -1]
+                bbox.annotation = currentWords[bbox.lineNo - 1][bbox.index - 1]
 
     imageName = path.split("/")[-1]
     imageName = imageName.split(".")[0]
@@ -462,10 +461,79 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
 
     Line.linesToCSV(linesDirectory, lines, imageName)
     BBox.bboxesToCSV(bboxesDirectory, flattenedBBoxes, imageName)
-    
-    dummy = ["1","2","3"]
+
+    dummy = ["1", "2", "3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 23
+# %% ../nbs/07_app.ipynb 22
+print(selectedManuscript)
+testVar = 1
+@callback(
+    Output("tabs-object", "value", allow_duplicate=True),
+    Input("save-and-continue", "n_clicks"),
+    # Input objects
+    State("work", "placeholder"),
+    State("author", "placeholder"),
+    State("language", "placeholder"),
+    State("country", "placeholder"),
+    State("city", "placeholder"),
+    State("institution", "placeholder"),
+    State("centuries-slider", "value"),
+    # Upload objects
+    State("upload-images", "contents"),
+    State("upload-images", "filename"),
+    #    State("upload-manuscripts","contents"),
+    #    State("upload-manuscripts","filename"),
+    # Conditional object
+    State("manuscript-select", "value"),
+    prevent_initial_call=True,
+)
+def saveNContinuteCallback(
+    clicks, # Input save-and-continue
+    work, # State work
+    author, # State author
+    language, # State language
+    country, # State country
+    city, # State city
+    institution, # State institution
+    centuriesValue, # State centuries-slider
+    imContents, # State upload-images
+    imFilenames, # State upload-images
+    #    manContents,
+    #    manFilenames,
+    manSelect, # State manuscript-select
+):
+    print(testVar)
+    print(selectedManuscript)
+    centuriesData = ""
+    if centuriesValue[0] == centuriesValue[1]:
+        centuriesData = centuries[centuriesValue[0]] + " Century"
+    else:
+        centuriesData = (
+            centuries[centuriesValue[0]]
+            + " to "
+            + centuries[centuriesValue[1]]
+            + " Centuries"
+        )
+
+    information = {
+        "Work": work,
+        "Author": author,
+        "Language": language,
+        "Country": country,
+        "City": city,
+        "Institution": institution,
+        "Centuries": centuriesData,
+    }
+
+    if manSelect == "Create New Manuscript":
+        selectedManuscript = (createManuscriptDirectory(information), information)
+        saveImages(imContents, imFilenames, selectedManuscript[0])
+    else:
+        updateMetadata(selectedManuscript[0], information)
+    
+    return "annotation"
+
+# %% ../nbs/07_app.ipynb 24
 if __name__ == "__main__":
     app.run(debug=True)
