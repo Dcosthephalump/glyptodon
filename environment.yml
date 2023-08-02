@@ -18,6 +18,8 @@ dependencies:
   - numpy
   - pip
   - pip:
+    # App library
     - opencv-python # This has no conda options
+    # Dev libraries
     - jupyterlab-code-formatter
     - black

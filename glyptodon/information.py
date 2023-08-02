@@ -6,11 +6,12 @@ __all__ = ['labeledInput', 'createInputObjects', 'createCenturiesSlider', 'creat
 
 # %% ../nbs/03_information.ipynb 5
 from dash import dcc, html
+import dash_bootstrap_components as dbc
 
 # %% ../nbs/03_information.ipynb 7
 def labeledInput(label, identity = None):
-    lab = html.Label(children=label)
-    inp = dcc.Input(placeholder=label, id=identity)
+    lab = dbc.Label(children=label)
+    inp = dbc.Input(placeholder=label, id=identity)
 
     return html.Div([lab, inp])
 
@@ -22,7 +23,7 @@ def createInputObjects():
     for data in metadata:
         inputObjects.append(labeledInput(label = data, identity = data.lower()))
 
-    return metadata, inputObjects
+    return inputObjects
 
 # %% ../nbs/03_information.ipynb 13
 def createCenturiesSlider():
@@ -48,13 +49,13 @@ def createCenturiesSlider():
 # %% ../nbs/03_information.ipynb 16
 def createUploadObjects():
     uploadImages = dcc.Upload(
-        children=html.Button("Upload Images"),
+        children=dbc.Button("Upload Images"),
         multiple=True,
         id="upload-images",
     )
 
     uploadManuscripts = dcc.Upload(
-        children=html.Button("Upload Manuscripts"),
+        children=dbc.Button("Upload Manuscripts"),
         multiple=True,
         id="upload-manuscripts",
     )
@@ -63,41 +64,59 @@ def createUploadObjects():
 
 # %% ../nbs/03_information.ipynb 19
 def createInformationInfo():
-    return dcc.Markdown(
-        """
-    # Information
-    
-    This menu allows you to modify the information about a manuscript and upload images and transcripts for a manuscript.
-    
-    Once you have made your changes and uploaded the relevant files, click the Save and Continue button to save these changes and move to the next tab.
-    """
+    return dbc.Card(
+        dbc.CardBody(
+            [
+                html.H1("Information"),
+                html.P(
+                    "This menu allows you to to modify information about current manuscripts as well as allowing you to upload images and transcripts for a new manuscript. "
+                    "Once you have made your changes and uploaded the relevant files, click the Save and Continue button to save these changes and move to the next tab."
+                )
+            ]
+        )
     )
 
 # %% ../nbs/03_information.ipynb 22
 def createSaveNContinue():
-    return html.Button("Save and Continue", id="save-and-continue")
+    return dbc.Button("Save and Continue", color="primary", id="save-and-continue")
 
 # %% ../nbs/03_information.ipynb 24
 def createInformationLayout():
-    metadata, inputObjects = createInputObjects()
+    inputObjects = createInputObjects()
     centuries, centuriesSlider = createCenturiesSlider()
     uploaders = createUploadObjects()
-    
+
     layout = html.Div(
         [
             createInformationInfo(),
-            html.Br(), # This is a temporary measure to make it more readable, true for following Br calls
-            html.Div(inputObjects),
-            html.Br(),
-            html.Div(
+            html.Br(),  # This is a temporary measure to make it more readable, true for following Br calls
+            dbc.Card(
                 [
-                    uploaders[0], # uploadImages
-                    uploaders[1], # uploadManuscripts
-                ]
+                    dbc.CardBody(
+                        [
+                            inputObjects[0],
+                            inputObjects[1],
+                            inputObjects[2],
+                            inputObjects[3],
+                            inputObjects[4],
+                            inputObjects[5],
+                            centuriesSlider,
+                            html.Br(),
+                            html.Div(
+                                dbc.ButtonGroup(
+                                    [
+                                        uploaders[0],  # uploadImages
+                                        uploaders[1],  # uploadManuscripts
+                                    ],
+                                ),
+                                id="uploader-container",
+                            ),
+                        ]
+                    ),
+                    createSaveNContinue(),
+                ],
             ),
-            html.Br(),
-            createSaveNContinue(),
         ]
     )
-    
-    return metadata, centuries, inputObjects, centuriesSlider, uploaders, layout
+
+    return centuries, layout

@@ -5,6 +5,7 @@ __all__ = ['createManuscriptSelect', 'createSelectionInfo', 'createFinalizeSelec
 
 # %% ../nbs/02_selection.ipynb 5
 from dash import dcc, html
+import dash_bootstrap_components as dbc
 from .manuscriptFiles import currentManuscripts
 
 # %% ../nbs/02_selection.ipynb 7
@@ -17,7 +18,7 @@ def createManuscriptSelect():
         selectionNames.append(manuscript[1]["Work"])
         selectionKey[selectionNames[-1]] = manuscript
 
-    manuscriptSelect = dcc.RadioItems(
+    manuscriptSelect = dbc.RadioItems(
         options=selectionNames + ["Create New Manuscript"],
         value="Stavronikita Monastery Greek handwritten document Collection no.53",
         id="manuscript-select",
@@ -27,19 +28,21 @@ def createManuscriptSelect():
 
 # %% ../nbs/02_selection.ipynb 10
 def createSelectionInfo():
-    return dcc.Markdown(
-        """
-    # Selection
-    
-    This menu allows you to select from the currently available manuscripts *or* create a new manuscript.
-    
-    Once you have made your selection, click the Finalize Selection button to move to the next tab.
-    """
+    return dbc.Card(
+        dbc.CardBody(
+            [
+                html.H1("Selection"),
+                html.P(
+                    "This menu allows you to select from the currently available manuscripts or create a new manuscript. "
+                    "Once you have made your selection, click the Finalize Selection button to move to the next tab."
+                )
+            ]
+        )
     )
 
 # %% ../nbs/02_selection.ipynb 13
 def createFinalizeSelection():
-    return html.Button("Finalize Selection", id="finalize-selection")
+    return dbc.Button("Finalize Selection", color="primary", id="finalize-selection")
 
 # %% ../nbs/02_selection.ipynb 16
 def createSelectionLayout():
@@ -47,9 +50,11 @@ def createSelectionLayout():
     layout = html.Div(
         [
             createSelectionInfo(),
-            html.Div(
+            html.Br(),
+            dbc.Card(
                 [
                     manuscriptSelect,
+                    html.Br(),
                     createFinalizeSelection(),
                 ]
             ),
