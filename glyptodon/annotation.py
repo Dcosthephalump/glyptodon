@@ -35,27 +35,27 @@ def createAnnotationInfo():
         )
     )
 
-# %% ../nbs/04_annotation.ipynb 9
+# %% ../nbs/04_annotation.ipynb 10
 def createAnnotationTextArea():
-    return dbc.Textarea(id="annotation-text-area",value="Enter transcription text here!",style={"width":"100%","height":285})
+    return dbc.Textarea(id="annotation-text-area",value="Enter transcription text here!",style={"width":"100%","height":800})
 
-# %% ../nbs/04_annotation.ipynb 12
+# %% ../nbs/04_annotation.ipynb 13
 def createPageSelector():
     return dcc.Dropdown(id="page-selector")
 
-# %% ../nbs/04_annotation.ipynb 15
+# %% ../nbs/04_annotation.ipynb 16
 def createSaveShapes():
     return dbc.Button("Save Shapes", color="info", id="save-shapes")
 
-# %% ../nbs/04_annotation.ipynb 17
+# %% ../nbs/04_annotation.ipynb 18
 def createSaveAnnotation():
     return dbc.Button("Save Transcription", color="info", id="save-annotation")
 
-# %% ../nbs/04_annotation.ipynb 19
+# %% ../nbs/04_annotation.ipynb 20
 def createNextTab():
     return dbc.Button("Next Tab", color="primary", id="next-tab")
 
-# %% ../nbs/04_annotation.ipynb 21
+# %% ../nbs/04_annotation.ipynb 22
 def createAnnotationFigure(path):
     img = cv2.imread(path)
     # This reorders the color channels (the first two indices relate to the intensity values of individual colors while the last index indicates what
@@ -67,7 +67,7 @@ def createAnnotationFigure(path):
                                 opacity=0.6))
     return fig
 
-# %% ../nbs/04_annotation.ipynb 25
+# %% ../nbs/04_annotation.ipynb 26
 def createFigureLayout():
     return dbc.Card(
         [
@@ -81,16 +81,20 @@ def createFigureLayout():
                         "eraseshape",
                     ]
                 },
+                style={
+                    "height": 800,
+                    "width": 800,
+                },
             ),
             createSaveShapes(),
         ]
     )
 
-# %% ../nbs/04_annotation.ipynb 28
+# %% ../nbs/04_annotation.ipynb 29
 def createTextareaLayout():
     return dbc.Card([createAnnotationTextArea(), createSaveAnnotation()])
 
-# %% ../nbs/04_annotation.ipynb 31
+# %% ../nbs/04_annotation.ipynb 32
 def createAnnotationLayout():
     return html.Div(
         [
@@ -99,12 +103,18 @@ def createAnnotationLayout():
             dbc.Card(
                 [
                     dbc.Container(
-                        dbc.Row(
-                            children=[
-                                dbc.Col(createFigureLayout(), md=7),
-                                dbc.Col(createTextareaLayout(), md=5),
-                            ]
-                        )
+                        [
+                            dbc.Row(
+                                children=[
+                                    dbc.Col(createFigureLayout(), md=7),
+                                    dbc.Col(createTextareaLayout(), md=5),
+                                ]
+                            )
+                        ],
+                        style={
+                            "height": "95%",
+                            "width": "95%",
+                        },
                     ),
                     createNextTab(),
                 ]
