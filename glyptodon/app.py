@@ -391,6 +391,8 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
 # %% ../nbs/07_app.ipynb 26
 @callback(
     Output("tabs-object", "value", allow_duplicate=True),
+    Output("manuscript-select", "value"),
+    Output("manuscript-select", "options"),
     Input("save-and-continue", "n_clicks"),
     # Input objects
     State("work", "placeholder"),
@@ -407,6 +409,7 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
     State("upload-manuscripts","filename"),
     # Conditional object
     State("manuscript-select", "value"),
+    State("manuscript-select", "options"),
     prevent_initial_call=True,
 )
 def saveNContinuteCallback(
@@ -420,12 +423,14 @@ def saveNContinuteCallback(
     centuriesValue, # State centuries-slider
     imContents, # State upload-images
     imFilenames, # State upload-images
-    manContents,
-    manFilenames,
-    manSelect, # State manuscript-select
+    manContents, # State upload-manuscripts
+    manFilenames, # State upload-manuscripts
+    manSelectVal, # State manuscript-select value
+    manSelectOpts, # State manuscript select options
 ):
     global selectedManuscript
     global centuries
+    global selectionKey
     centuriesData = ""
     if centuriesValue[0] == centuriesValue[1]:
         centuriesData = centuries[centuriesValue[0]] + " Century"
@@ -436,7 +441,15 @@ def saveNContinuteCallback(
             + centuries[centuriesValue[1]]
             + " Centuries"
         )
-
+    
+    print(work)
+    print(author)
+    print(language)
+    print(country)
+    print(city)
+    print(institution)
+    print(centuriesData)
+    
     information = {
         "Work": work,
         "Author": author,
@@ -447,14 +460,28 @@ def saveNContinuteCallback(
         "Centuries": centuriesData,
     }
 
-    if manSelect == "Create New Manuscript":
+    print(information)
+    if manSelectVal == "Create New Manuscript":
         selectedManuscript = (createManuscriptDirectory(information), information)
         saveImages(imContents, imFilenames, selectedManuscript[0])
         saveTranscripts(manContents, manFilenames, selectedManuscript[0])
+        
+        manuscripts = currentManuscripts()
+        
+        selectionKey = {}
+        selectionNames = []
+        for manuscript in manuscripts:
+            selectionNames.append(manuscript[1]["Work"])
+            selectionKey[selectionNames[-1]] = manuscript
+        
+        manSelectVal = information["Work"]
+        manSelectOpts = selectionNames + ["Create New Manuscript"]
+        
+        return "annotation", manSelectVal, manSelectOpts
     else:
         updateMetadata(selectedManuscript[0], information)
-    
-    return "annotation"
+        
+        return "annotation", manSelectVal, manSelectOpts
 
 # %% ../nbs/07_app.ipynb 28
 @callback(
