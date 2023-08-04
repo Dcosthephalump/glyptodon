@@ -3,8 +3,8 @@
 # %% auto 0
 __all__ = ['selectionKey', 'selectionLayout', 'centuries', 'informationLayout', 'annotationLayout', 'exportLayout', 'app',
            'newManuscript', 'selectedManuscript', 'selectManuscript', 'finalizeSelectionCallback',
-           'pageSelectorCallback', 'saveShapesCallback', 'lineNumberCallback', 'saveAnnotationCallback',
-           'saveNContinuteCallback', 'nextTabCallback', 'exportManuscriptCallback']
+           'saveNContinuteCallback', 'pageSelectorCallback', 'saveShapesCallback', 'lineNumberCallback',
+           'saveAnnotationCallback', 'nextTabCallback', 'exportManuscriptCallback']
 
 # %% ../nbs/07_app.ipynb 4
 from dash import Dash, State, Input, Output, callback, dcc, html
@@ -128,29 +128,126 @@ def selectManuscript(work):
             ]
         return work, author, language, country, city, institution, centuriesValue, {"display": "none"}
 
-# %% ../nbs/07_app.ipynb 16
+# %% ../nbs/07_app.ipynb 17
 @callback(
-    Output("page-selector", "options"),
-    Output("page-selector", "value"),
     Output("tabs-object","value", allow_duplicate=True),
     Input("finalize-selection", "n_clicks"),
     prevent_initial_call=True,
 )
 def finalizeSelectionCallback(clicks):
+    return "information"
+
+# %% ../nbs/07_app.ipynb 19
+@callback(
+    Output("tabs-object", "value", allow_duplicate=True),
+    Output("manuscript-select", "value"),
+    Output("manuscript-select", "options"),
+    Output("page-selector", "options"),
+    Output("page-selector", "value"),
+    Input("save-and-continue", "n_clicks"),
+    # Input objects
+    State("work", "value"),
+    State("author", "value"),
+    State("language", "value"),
+    State("country", "value"),
+    State("city", "value"),
+    State("institution", "value"),
+    State("centuries-slider", "value"),
+    # Upload objects
+    State("upload-images", "contents"),
+    State("upload-images", "filename"),
+    State("upload-manuscripts","contents"),
+    State("upload-manuscripts","filename"),
+    # Conditional object
+    State("manuscript-select", "value"),
+    State("manuscript-select", "options"),
+    prevent_initial_call=True,
+)
+def saveNContinuteCallback(
+    clicks, # Input save-and-continue
+    work, # State work
+    author, # State author
+    language, # State language
+    country, # State country
+    city, # State city
+    institution, # State institution
+    centuriesValue, # State centuries-slider
+    imContents, # State upload-images
+    imFilenames, # State upload-images
+    manContents, # State upload-manuscripts
+    manFilenames, # State upload-manuscripts
+    manSelectVal, # State manuscript-select value
+    manSelectOpts, # State manuscript select options
+):
     global selectedManuscript
-    dropdownOptions = []
-    relativePaths = manuscriptImages(selectedManuscript[0])
+    global centuries
+    global selectionKey
+    centuriesData = ""
+    if centuriesValue[0] == centuriesValue[1]:
+        centuriesData = centuries[centuriesValue[0]] + " Century"
+    else:
+        centuriesData = (
+            centuries[centuriesValue[0]]
+            + " to "
+            + centuries[centuriesValue[1]]
+            + " Centuries"
+        )
+    
+    information = {
+        "Work": work,
+        "Author": author,
+        "Language": language,
+        "Country": country,
+        "City": city,
+        "Institution": institution,
+        "Centuries": centuriesData,
+    }
 
-    index = 1
-    for path in relativePaths:
-        imageName = path.split("/")[-1]
-        if imageName[0] != ".":
-            dropdownOptions.append({"label": f"Page {index}", "value": path})
-            index = index + 1
+    if manSelectVal == "Create New Manuscript":
+        selectedManuscript = (createManuscriptDirectory(information), information)
+        saveImages(imContents, imFilenames, selectedManuscript[0])
+        saveTranscripts(manContents, manFilenames, selectedManuscript[0])
+        
+        manuscripts = currentManuscripts()
+        print(manuscripts)
+        selectionKey = {}
+        selectionNames = []
+        for manuscript in manuscripts:
+            selectionNames.append(manuscript[1]["Work"])
+            selectionKey[selectionNames[-1]] = manuscript
+        
+        manSelectVal = information["Work"]
+        manSelectOpts = selectionNames + ["Create New Manuscript"]
+        
+        selectedManuscript = selectionKey[information["Work"]]
+        
+        dropdownOptions = []
+        relativePaths = manuscriptImages(selectedManuscript[0])
 
-    return dropdownOptions, dropdownOptions[0]["value"], "information"
+        index = 1
+        for path in relativePaths:
+            imageName = path.split("/")[-1]
+            if imageName[0] != ".":
+                dropdownOptions.append({"label": f"Page {index}", "value": path})
+                index = index + 1
+        
+        return "annotation", manSelectVal, manSelectOpts, dropdownOptions, dropdownOptions[0]["value"]
+    else:
+        updateMetadata(selectedManuscript[0], information)
+        
+        dropdownOptions = []
+        relativePaths = manuscriptImages(selectedManuscript[0])
 
-# %% ../nbs/07_app.ipynb 18
+        index = 1
+        for path in relativePaths:
+            imageName = path.split("/")[-1]
+            if imageName[0] != ".":
+                dropdownOptions.append({"label": f"Page {index}", "value": path})
+                index = index + 1
+        
+        return "annotation", manSelectVal, manSelectOpts, dropdownOptions, dropdownOptions[0]["value"]
+
+# %% ../nbs/07_app.ipynb 22
 @callback(
     Output("annotation-figure", "figure"),
     Input("page-selector", "value"),
@@ -205,7 +302,7 @@ def pageSelectorCallback(path):
 
     return fig
 
-# %% ../nbs/07_app.ipynb 20
+# %% ../nbs/07_app.ipynb 24
 @callback(
     Output("dummy-output","children", allow_duplicate=True),
     Input("save-shapes", "n_clicks"),
@@ -271,7 +368,7 @@ def saveShapesCallback(clicks, shapes, path):
     dummy = ["1","2","3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 22
+# %% ../nbs/07_app.ipynb 26
 @callback(
     Output("annotation-text-area","value"),
     Input("annotation-figure", "relayoutData"),
@@ -306,7 +403,7 @@ def lineNumberCallback(shapes, currentText):
     
     return newValue
 
-# %% ../nbs/07_app.ipynb 24
+# %% ../nbs/07_app.ipynb 28
 @callback(
     Output("dummy-output", "children", allow_duplicate=True),
     Input("save-annotation", "n_clicks"),
@@ -388,102 +485,7 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
     dummy = ["1", "2", "3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 26
-@callback(
-    Output("tabs-object", "value", allow_duplicate=True),
-    Output("manuscript-select", "value"),
-    Output("manuscript-select", "options"),
-    Input("save-and-continue", "n_clicks"),
-    # Input objects
-    State("work", "placeholder"),
-    State("author", "placeholder"),
-    State("language", "placeholder"),
-    State("country", "placeholder"),
-    State("city", "placeholder"),
-    State("institution", "placeholder"),
-    State("centuries-slider", "value"),
-    # Upload objects
-    State("upload-images", "contents"),
-    State("upload-images", "filename"),
-    State("upload-manuscripts","contents"),
-    State("upload-manuscripts","filename"),
-    # Conditional object
-    State("manuscript-select", "value"),
-    State("manuscript-select", "options"),
-    prevent_initial_call=True,
-)
-def saveNContinuteCallback(
-    clicks, # Input save-and-continue
-    work, # State work
-    author, # State author
-    language, # State language
-    country, # State country
-    city, # State city
-    institution, # State institution
-    centuriesValue, # State centuries-slider
-    imContents, # State upload-images
-    imFilenames, # State upload-images
-    manContents, # State upload-manuscripts
-    manFilenames, # State upload-manuscripts
-    manSelectVal, # State manuscript-select value
-    manSelectOpts, # State manuscript select options
-):
-    global selectedManuscript
-    global centuries
-    global selectionKey
-    centuriesData = ""
-    if centuriesValue[0] == centuriesValue[1]:
-        centuriesData = centuries[centuriesValue[0]] + " Century"
-    else:
-        centuriesData = (
-            centuries[centuriesValue[0]]
-            + " to "
-            + centuries[centuriesValue[1]]
-            + " Centuries"
-        )
-    
-    print(work)
-    print(author)
-    print(language)
-    print(country)
-    print(city)
-    print(institution)
-    print(centuriesData)
-    
-    information = {
-        "Work": work,
-        "Author": author,
-        "Language": language,
-        "Country": country,
-        "City": city,
-        "Institution": institution,
-        "Centuries": centuriesData,
-    }
-
-    print(information)
-    if manSelectVal == "Create New Manuscript":
-        selectedManuscript = (createManuscriptDirectory(information), information)
-        saveImages(imContents, imFilenames, selectedManuscript[0])
-        saveTranscripts(manContents, manFilenames, selectedManuscript[0])
-        
-        manuscripts = currentManuscripts()
-        
-        selectionKey = {}
-        selectionNames = []
-        for manuscript in manuscripts:
-            selectionNames.append(manuscript[1]["Work"])
-            selectionKey[selectionNames[-1]] = manuscript
-        
-        manSelectVal = information["Work"]
-        manSelectOpts = selectionNames + ["Create New Manuscript"]
-        
-        return "annotation", manSelectVal, manSelectOpts
-    else:
-        updateMetadata(selectedManuscript[0], information)
-        
-        return "annotation", manSelectVal, manSelectOpts
-
-# %% ../nbs/07_app.ipynb 28
+# %% ../nbs/07_app.ipynb 30
 @callback(
     Output("tabs-object", "value", allow_duplicate=True),
     Input("next-tab", "n_clicks"),
@@ -492,7 +494,7 @@ def saveNContinuteCallback(
 def nextTabCallback(clicks):
     return "export"
 
-# %% ../nbs/07_app.ipynb 30
+# %% ../nbs/07_app.ipynb 32
 @callback(
     Output("export-download", "data"),
     Input("export-button", "n_clicks"),
@@ -505,6 +507,6 @@ def exportManuscriptCallback(clicks, name, options):
     path = zipManuscript(options, selectedManuscript[0], name)
     return dcc.send_file(path)
 
-# %% ../nbs/07_app.ipynb 32
+# %% ../nbs/07_app.ipynb 34
 if __name__ == "__main__":
     app.run(debug=True)

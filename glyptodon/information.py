@@ -55,7 +55,7 @@ def createUploadObjects():
     )
 
     uploadManuscripts = dcc.Upload(
-        children=dbc.Button("Upload Manuscripts"),
+        children=dbc.Button("Upload Transcripts"),
         multiple=True,
         id="upload-manuscripts",
     )

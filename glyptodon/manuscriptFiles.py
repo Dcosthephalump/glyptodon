@@ -24,7 +24,6 @@ def createManuscriptDirectory(metadata:dict):
 
     # Creating the root directory for a new manuscript
     title = directoryNameClean(metadata['Work'])
-    print(title)
     manuscriptDirectory = os.path.join(allManuscriptsDirectory,title)
     os.mkdir(manuscriptDirectory)
     
@@ -260,11 +259,11 @@ def manuscriptImages(targetDirectory):
         # The slice removes an annoying slash from the string at the first index
     relativeToManuscript = re.sub(baseDirectory, "", targetDirectory)[1::]
     relativeToImages = os.path.join(relativeToManuscript, 'images')
-    
     # Now we pull out every file in the directory into a list
     files = []
     for file in os.listdir(relativeToImages):
-        files.append(file)
+        if file.startswith('.') == False:
+            files.append(file)
         
     # We sort the list alphanumerically
     files.sort()
