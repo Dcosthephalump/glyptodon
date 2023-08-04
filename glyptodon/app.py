@@ -209,7 +209,6 @@ def saveNContinuteCallback(
         saveTranscripts(manContents, manFilenames, selectedManuscript[0])
         
         manuscripts = currentManuscripts()
-        print(manuscripts)
         selectionKey = {}
         selectionNames = []
         for manuscript in manuscripts:
