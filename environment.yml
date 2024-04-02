@@ -16,6 +16,7 @@ dependencies:
   - dash-bootstrap-components # For website styling
   - pandas
   - numpy
+  - matplotlib
   - pip
   - pip:
     # App library

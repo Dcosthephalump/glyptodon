@@ -18,8 +18,9 @@ from .selection import *
 import re
 import os
 
-# %% ../nbs/07_app.ipynb 8
+# %% ../nbs/07_app.ipynb 6
 selectionKey, selectionLayout = createSelectionLayout()
+print(selectionKey)
 
 centuries, informationLayout = createInformationLayout()
 
@@ -27,7 +28,7 @@ annotationLayout = createAnnotationLayout()
 
 exportLayout = createExportLayout()
 
-# %% ../nbs/07_app.ipynb 10
+# %% ../nbs/07_app.ipynb 8
 app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
@@ -77,7 +78,7 @@ app.layout = html.Div(
     ]
 )
 
-# %% ../nbs/07_app.ipynb 14
+# %% ../nbs/07_app.ipynb 10
 newManuscript = False
 selectedManuscript = selectionKey[
     "Stavronikita Monastery Greek handwritten document Collection no.53"
@@ -128,7 +129,7 @@ def selectManuscript(work):
             ]
         return work, author, language, country, city, institution, centuriesValue, {"display": "none"}
 
-# %% ../nbs/07_app.ipynb 17
+# %% ../nbs/07_app.ipynb 12
 @callback(
     Output("tabs-object","value", allow_duplicate=True),
     Input("finalize-selection", "n_clicks"),
@@ -137,7 +138,7 @@ def selectManuscript(work):
 def finalizeSelectionCallback(clicks):
     return "information"
 
-# %% ../nbs/07_app.ipynb 19
+# %% ../nbs/07_app.ipynb 14
 @callback(
     Output("tabs-object", "value", allow_duplicate=True),
     Output("manuscript-select", "value"),
@@ -246,7 +247,7 @@ def saveNContinuteCallback(
         
         return "annotation", manSelectVal, manSelectOpts, dropdownOptions, dropdownOptions[0]["value"]
 
-# %% ../nbs/07_app.ipynb 22
+# %% ../nbs/07_app.ipynb 16
 @callback(
     Output("annotation-figure", "figure"),
     Input("page-selector", "value"),
@@ -301,7 +302,7 @@ def pageSelectorCallback(path):
 
     return fig
 
-# %% ../nbs/07_app.ipynb 24
+# %% ../nbs/07_app.ipynb 18
 @callback(
     Output("dummy-output","children", allow_duplicate=True),
     Input("save-shapes", "n_clicks"),
@@ -367,7 +368,7 @@ def saveShapesCallback(clicks, shapes, path):
     dummy = ["1","2","3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 26
+# %% ../nbs/07_app.ipynb 20
 @callback(
     Output("annotation-text-area","value"),
     Input("annotation-figure", "relayoutData"),
@@ -402,7 +403,7 @@ def lineNumberCallback(shapes, currentText):
     
     return newValue
 
-# %% ../nbs/07_app.ipynb 28
+# %% ../nbs/07_app.ipynb 22
 @callback(
     Output("dummy-output", "children", allow_duplicate=True),
     Input("save-annotation", "n_clicks"),
@@ -484,7 +485,7 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
     dummy = ["1", "2", "3"]
     return dummy
 
-# %% ../nbs/07_app.ipynb 30
+# %% ../nbs/07_app.ipynb 24
 @callback(
     Output("tabs-object", "value", allow_duplicate=True),
     Input("next-tab", "n_clicks"),
@@ -493,7 +494,7 @@ def saveAnnotationCallback(clicks, shapes, path, currentText):
 def nextTabCallback(clicks):
     return "export"
 
-# %% ../nbs/07_app.ipynb 32
+# %% ../nbs/07_app.ipynb 26
 @callback(
     Output("export-download", "data"),
     Input("export-button", "n_clicks"),
@@ -506,6 +507,6 @@ def exportManuscriptCallback(clicks, name, options):
     path = zipManuscript(options, selectedManuscript[0], name)
     return dcc.send_file(path)
 
-# %% ../nbs/07_app.ipynb 34
+# %% ../nbs/07_app.ipynb 28
 if __name__ == "__main__":
     app.run(debug=True)
